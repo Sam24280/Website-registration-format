@@ -1,0 +1,95 @@
+//login.html
+
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Login Page</title>
+</head>
+<body>
+	<form action="login.php" method="post">
+		<h2>Login Page</h2>
+		<label for="username">Username:</label>
+		<input type="text" id="username" name="username" required>
+		<label for="password">Password:</label>
+		<input type="password" id="password" name="password" required>
+		<input type="submit" value="Login">
+	</form>
+
+	<?php if (isset($_GET['error'])) { ?>
+		<p style="color: rgb(104, 6, 6);">Invalid username or password</p>
+	<?php } ?>
+</body>
+</html>
+
+
+
+//login.php
+
+<?php
+// Configuration
+$db_host = 'localhost';
+$db_username = 'root';
+$db_password = '';
+$db_name = 'users1';
+
+// Create connection
+$conn = new mysqli($db_host, $db_username, $db_password, $db_name);
+
+// Check connection
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+// Login user
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $username = $_POST["username"];
+    $password = $_POST["password"];
+
+    $query = "SELECT * FROM users WHERE username = '$username' AND password = '$password'";
+    $result = $conn->query($query);
+
+    if ($result->num_rows > 0) {
+        // Login successful, redirect to dashboard
+        header('Location: dashboard.php');
+        exit;
+    } else {
+        header('Location: login.html?error=1');
+        exit;
+    }
+}
+
+$conn->close();
+?>
+
+
+
+
+//dashboard.php
+
+<?php
+
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $username = $_POST["username"];
+    $password = $_POST["password"];
+
+    $query = "SELECT * FROM users WHERE username = '$username'";
+    $result = $conn->query($query);
+
+    if ($result->num_rows > 0) {
+        $user_data = $result->fetch_assoc();
+        $hashed_password = $user_data['password'];
+
+        if (password_verify($password, $hashed_password)) {
+            // Login successful, redirect to dashboard
+            header('Location: dashboard.php');
+            exit;
+        } else {
+            header('Location: login.html?error=1');
+            exit;
+        }
+    } else {
+        header('Location: login.html?error=1');
+        exit;
+    }
+}
